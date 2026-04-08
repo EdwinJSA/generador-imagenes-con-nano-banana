@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kira AI Generator | Premium Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&family=Roboto+Mono&family=Montserrat:wght@700&family=Pacifico&family=Bebas+Neue&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #111111;
+            --card-bg: #1e1e1e;
+            --accent: #00e676;
+            --input-bg: #2a2a2a;
+            --text-main: #e0e0e0;
+            --text-dim: #a0a0a0;
+            --border: #333333;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .container { 
+            background: var(--card-bg); 
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 100%;
+            max-width: 550px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 1px solid var(--border);
+            /* Asegura que el contenido interno no se desplace */
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { font-size: 28px; margin: 0 0 5px 0; color: white; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: var(--text-dim); font-size: 14px; margin-bottom: 30px; }
+
+        form { width: 100%; }
+
+        label { 
+            display: block; 
+            margin-top: 20px; 
+            font-weight: 600; 
+            font-size: 12px; 
+            letter-spacing: 0.5px;
+            color: var(--accent); 
+            text-transform: uppercase;
+        }
+
+        textarea, select, input { 
+            width: 100%; 
+            background: var(--input-bg);
+            color: white;
+            border: 1px solid #444;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+            box-sizing: border-box; /* Crucial para evitar que se salgan a la derecha */
+        }
+
+        textarea:focus, select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 230, 118, 0.2); }
+
+        textarea { height: 100px; resize: none; }
+
+        /* Contenedor Grid para inputs alineados */
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* Estilo para el input de archivo (Logo) */
+        .file-input-wrapper {
+            position: relative;
+            margin-top: 8px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            font-size: 13px;
+            border: 1px dashed #555;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        button { 
+            background: var(--accent); 
+            color: #000; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer; 
+            margin-top: 30px; 
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        button:hover { background: #00c853; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 230, 118, 0.3); }
+
+        /* Loading Overlay */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 17, 17, 0.95);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #loadingText { font-size: 18px; font-weight: 300; color: white; max-width: 80%; }
+
+        .result { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 30px; width: 100%; text-align: center; }
+        .result img { width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #444; }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingText">Iniciando motores creativos...</div>
+    </div>
+
+    <div class="container">
+        <h1>Generador de Imagenes</h1>
+
+        <form id="generatorForm" action="/generar" method="POST" enctype="multipart/form-data">
+            
+            <label>LOGO DE LA EMPRESA (Opcional)</label>
+            <input type="file" name="logo" accept="image/*">
+
+            <label>OBJETIVO / INTENCIÓN</label>
+            <textarea name="prompt" placeholder="Ej. Campaña de control de plagas con un técnico profesional en una cocina limpia..." required></textarea>
+
+            <div class="input-group">
+                <div>
+                    <label>ESTILO</label>
+                    <select name="style">
+                        <option value="cinematic photo">Cinemático Realista</option>
+                        <option value="minimalist UI">Minimalista UI/UX</option>
+                        <option value="3d isometric">3D Isométrico</option>
+                        <option value="digital art">Arte Digital</option>
+                    </select>
+                </div>
+                <div>
+                    <label>PROPORCIÓN</label>
+                    <select name="aspectRatio">
+                        <option value="1:1">Cuadrado (1:1)</option>
+                        <option value="16:9">Horizontal (16:9)</option>
+                        <option value="9:16">Vertical (9:16)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label>PALETA DE COLORES</label>
+                    <input type="text" name="colors" placeholder="Azul, Blanco...">
+                </div>
+                <div>
+                    <label>TIPOGRAFÍA</label>
+                    <select name="typography" id="fontSelector" onchange="this.style.fontFamily = this.options[this.selectedIndex].style.fontFamily">
+                        <option value="Inter" style="font-family: 'Inter';">Inter (Modern)</option>
+                        <option value="Montserrat" style="font-family: 'Montserrat';">Montserrat (Bold)</option>
+                        <option value="Bebas Neue" style="font-family: 'Bebas Neue';">Bebas Neue (Impact)</option>
+                        <option value="Playfair Display" style="font-family: 'Playfair Display';">Playfair (Classy)</option>
+                        <option value="Pacifico" style="font-family: 'Pacifico';">Pacifico (Hand)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit">Generar Arte Publicitario</button>
+        </form>
+
+        <% if (locals.image) { %>
+            <div class="result">
+                <label style="margin-bottom: 10px;">VISTA PREVIA DEL ARTE</label>
+                <img src="<%= image %>" alt="Imagen generada">
+                <a href="<%= image %>" download="kira-ai-result.png" style="display: block; color: var(--accent); margin-top: 15px; text-decoration: none; font-size: 13px; font-weight: bold;">DESCARGAR PARA CAMPAÑA ⬇</a>
+            </div>
+        <% } %>
+
+        <% if (locals.error) { %>
+            <div style="background: rgba(255,82,82,0.1); padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid #ff5252;">
+                <p style="color: #ff5252; margin: 0; font-size: 13px;">⚠️ <%= error %></p>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        const form = document.getElementById('generatorForm');
+        const overlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+
+        const phrases = [
+            "Analizando identidad visual del logo...",
+            "Configurando entorno de Nano Banana 2...",
+            "Ajustando composición de la escena...",
+            "Generando iluminación profesional...",
+            "Casi listo para tu campaña..."
+        ];
+
+        form.onsubmit = function() {
+            overlay.style.display = 'flex';
+            let i = 0;
+            setInterval(() => {
+                loadingText.innerText = phrases[i % phrases.length];
+                i++;
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
