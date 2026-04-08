@@ -213,11 +213,26 @@
             <button type="submit">Generar Arte Publicitario</button>
         </form>
 
-        <% if (locals.image) { %>
+        <!-- <% if (locals.image) { %>
             <div class="result">
                 <label style="margin-bottom: 10px;">VISTA PREVIA DEL ARTE</label>
                 <img src="<%= image %>" alt="Imagen generada">
                 <a href="<%= image %>" download="kira-ai-result.png" style="display: block; color: var(--accent); margin-top: 15px; text-decoration: none; font-size: 13px; font-weight: bold;">DESCARGAR PARA CAMPAÑA ⬇</a>
+            </div>
+        <% } %> -->
+
+        <% if (locals.images && locals.images.length > 0) { %>
+            <div class="result">
+                <label style="margin-bottom: 20px;">VISTA PREVIA (3 PROPUESTAS)</label>
+                
+                <div class="gallery" style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+                    <% images.forEach(function(imgSrc, index) { %>
+                        <div class="gallery-item" style="margin-bottom: 20px;">
+                            <img src="<%= imgSrc %>" alt="Propuesta <%= index + 1 %>" style="width: 100%; border-radius: 15px;">
+                            <a href="<%= imgSrc %>" download="propuesta-<%= index + 1 %>.png" style="display: block; color: var(--accent); margin-top: 10px; text-decoration: none; font-size: 13px;">DESCARGAR PROPUESTA <%= index + 1 %> ⬇</a>
+                        </div>
+                    <% }); %>
+                </div>
             </div>
         <% } %>
 
@@ -235,7 +250,7 @@
 
         const phrases = [
             "Analizando identidad visual del logo...",
-            "Configurando entorno de Nano Banana 2...",
+            "Configurando entorno de Nano Banana Pro...",
             "Ajustando composición de la escena...",
             "Generando iluminación profesional...",
             "Casi listo para tu campaña..."

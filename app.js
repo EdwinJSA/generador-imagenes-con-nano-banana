@@ -24,7 +24,7 @@ app.post('/generar', upload.single('logo'), async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" });
 
         const textInstruction = `
-            Task: Create a professional advertising graphic.
+            Task: Create a professional advertising graphic in ULTRA HIGH RESOLUTION (2K o 4K) with the following details:
             Requirements:
             - Concept: ${prompt}
             - Style: ${style}
@@ -45,26 +45,38 @@ app.post('/generar', upload.single('logo'), async (req, res) => {
             });
         }
 
-        const result = await model.generateContent(contentParts);
-        const response = await result.response;
-        const candidate = response.candidates[0];
+        const numeroDePropuestas = 3;
+        const promesas = [];
 
-        const imagePart = candidate.content.parts.find(part => part.inlineData);
+        for (let i = 0; i < numeroDePropuestas; i++) {
+            promesas.push(model.generateContent(contentParts));
+        }
 
-        if (imagePart) {
-            const imageBase64 = imagePart.inlineData.data;
-            const mimeType = imagePart.inlineData.mimeType || 'image/png';
-            const imageSrc = `data:${mimeType};base64,${imageBase64}`;
+        const resultados = await Promise.all(promesas);
+        const imagenesGeneradas = [];
+
+        resultados.forEach(result => {
+            const candidate = result.response.candidates[0];
+            const imagePart = candidate.content.parts.find(part => part.inlineData);
             
-            res.render('index', { image: imageSrc, error: null });
+            if (imagePart) {
+                const imageBase64 = imagePart.inlineData.data;
+                const mimeType = imagePart.inlineData.mimeType || 'image/png';
+                imagenesGeneradas.push(`data:${mimeType};base64,${imageBase64}`);
+            }
+        });
+
+        if (imagenesGeneradas.length > 0) {
+            res.render('index', { images: imagenesGeneradas, error: null });
         } else {
-            res.render('index', { image: null, error: "La IA generó texto pero no una imagen. Intenta ser más específico." });
+            res.render('index', { images: null, error: "La IA no pudo generar las imágenes. Intenta ser más específico." });
         }
 
     } catch (error) {
-        console.error("Error en Kira AI:", error);
-        res.render('index', { image: null, error: "Hubo un problema al procesar la imagen con el logo." });
+        console.error("Error:", error);
+        res.render('index', { images: null, error: "Hubo un error..." }); // <-- Plural aquí también
     }
 });
+
 
 module.exports = app;
