@@ -66,3 +66,5 @@ app.post('/generar', upload.single('logo'), async (req, res) => {
         res.render('index', { image: null, error: "Hubo un problema al procesar la imagen con el logo." });
     }
 });
+
+module.exports = app;
