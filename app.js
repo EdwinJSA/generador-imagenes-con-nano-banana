@@ -14,7 +14,6 @@ const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 const CHUNK_DELIMITER = "---KIRA_CHUNK_END---";
 
-// 🔥 VARIACIONES (NO TOCAR)
 const variaciones = [
     { type: "action-heavy", outfit: "full white protective suit with respirator mask and gloves", scene: "actively spraying a bed with visible mist spreading in the air", environment: "residential bedroom, slightly dramatic lighting", mood: "intense, high action", ratio: "4:5" },
     { type: "precision-work", outfit: "light professional uniform with gloves", scene: "carefully applying treatment to mattress seams using a small sprayer", environment: "close-up bedroom scene", mood: "detailed, precise, technical", ratio: "4:5" },
@@ -28,15 +27,12 @@ const variaciones = [
     { type: "entry-service", outfit: "uniform with backpack sprayer", scene: "entering a house through the front door", environment: "house entrance", mood: "service arrival", ratio: "16:9" }
 ];
 
-// 🔥 RANDOM SIMPLE
 function getRandomVariations(arr, n = 3) {
     return [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
 }
 
-// 🔥 DELAY
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
-// 🔥 RETRY (ANTI 503)
 async function generateWithRetry(model, content, retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -83,30 +79,85 @@ function buildPrompt(prompt, v, colors) {
     `;
 }
 
-app.post('/generar', upload.single('logo'), async (req, res) => {
+// app.post('/generar', upload.single('logo'), async (req, res) => {
 
+//     res.setHeader('Content-Type', 'text/plain');
+//     res.setHeader('Transfer-Encoding', 'chunked');
+//     res.flushHeaders();
+
+//     const { prompt, colors, aspectRatio } = req.body;
+
+//     const model = genAI.getGenerativeModel({
+//         model: "gemini-3.1-flash-image-preview"
+//     });
+
+//     const seleccion = getRandomVariations(variaciones, 3);
+
+//     for (let i = 0; i < seleccion.length; i++) {
+//         const v = seleccion[i];
+
+//         try {
+//             if (aspectRatio) v.ratio = aspectRatio;
+
+//             const finalPrompt = buildPrompt(prompt, v, colors);
+
+//             let content = [finalPrompt];
+
+//             if (req.file) {
+//                 content.push({
+//                     inlineData: {
+//                         data: req.file.buffer.toString("base64"),
+//                         mimeType: req.file.mimetype
+//                     }
+//                 });
+//             }
+
+//             const result = await generateWithRetry(model, content);
+
+//             const candidate = result.response.candidates[0];
+//             const imagePart = candidate.content.parts.find(p => p.inlineData);
+
+//             if (imagePart) {
+//                 res.write(JSON.stringify({
+//                     index: i,
+//                     image: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`
+//                 }) + CHUNK_DELIMITER);
+//             }
+
+//         } catch (err) {
+//             console.error(err.message);
+
+//             res.write(JSON.stringify({
+//                 error: `Error en propuesta ${i + 1}`
+//             }) + CHUNK_DELIMITER);
+//         }
+
+//         await delay(1200);
+//     }
+
+//     res.end();
+// });
+
+
+
+app.post('/generar', upload.single('logo'), async (req, res) => {
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Transfer-Encoding', 'chunked');
-    res.flushHeaders(); // 🔥 CLAVE
+    res.flushHeaders();
 
     const { prompt, colors, aspectRatio } = req.body;
-
     const model = genAI.getGenerativeModel({
         model: "gemini-3.1-flash-image-preview"
     });
 
     const seleccion = getRandomVariations(variaciones, 3);
 
-    for (let i = 0; i < seleccion.length; i++) {
-        const v = seleccion[i];
-
+    const promesas = seleccion.map(async (v, i) => {
         try {
             if (aspectRatio) v.ratio = aspectRatio;
-
             const finalPrompt = buildPrompt(prompt, v, colors);
 
             let content = [finalPrompt];
-
             if (req.file) {
                 content.push({
                     inlineData: {
@@ -117,7 +168,6 @@ app.post('/generar', upload.single('logo'), async (req, res) => {
             }
 
             const result = await generateWithRetry(model, content);
-
             const candidate = result.response.candidates[0];
             const imagePart = candidate.content.parts.find(p => p.inlineData);
 
@@ -127,18 +177,16 @@ app.post('/generar', upload.single('logo'), async (req, res) => {
                     image: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`
                 }) + CHUNK_DELIMITER);
             }
-
         } catch (err) {
-            console.error(err.message);
-
+            console.error(`Error en imagen ${i}:`, err.message);
             res.write(JSON.stringify({
-                error: `Error en propuesta ${i + 1}`
+                error: `Error en propuesta ${i + 1}`,
+                index: i
             }) + CHUNK_DELIMITER);
         }
+    });
 
-        await delay(1200);
-    }
-
+    await Promise.allSettled(promesas);
     res.end();
 });
 
@@ -149,7 +197,6 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-// 🔥 SERVER
 app.listen(3000, () => {
     console.log("http://localhost:3000");
 });
