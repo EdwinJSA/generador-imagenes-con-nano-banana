@@ -79,70 +79,11 @@ function buildPrompt(prompt, v, colors) {
     `;
 }
 
-// app.post('/generar', upload.single('logo'), async (req, res) => {
-
-//     res.setHeader('Content-Type', 'text/plain');
-//     res.setHeader('Transfer-Encoding', 'chunked');
-//     res.flushHeaders();
-
-//     const { prompt, colors, aspectRatio } = req.body;
-
-//     const model = genAI.getGenerativeModel({
-//         model: "gemini-3.1-flash-image-preview"
-//     });
-
-//     const seleccion = getRandomVariations(variaciones, 3);
-
-//     for (let i = 0; i < seleccion.length; i++) {
-//         const v = seleccion[i];
-
-//         try {
-//             if (aspectRatio) v.ratio = aspectRatio;
-
-//             const finalPrompt = buildPrompt(prompt, v, colors);
-
-//             let content = [finalPrompt];
-
-//             if (req.file) {
-//                 content.push({
-//                     inlineData: {
-//                         data: req.file.buffer.toString("base64"),
-//                         mimeType: req.file.mimetype
-//                     }
-//                 });
-//             }
-
-//             const result = await generateWithRetry(model, content);
-
-//             const candidate = result.response.candidates[0];
-//             const imagePart = candidate.content.parts.find(p => p.inlineData);
-
-//             if (imagePart) {
-//                 res.write(JSON.stringify({
-//                     index: i,
-//                     image: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`
-//                 }) + CHUNK_DELIMITER);
-//             }
-
-//         } catch (err) {
-//             console.error(err.message);
-
-//             res.write(JSON.stringify({
-//                 error: `Error en propuesta ${i + 1}`
-//             }) + CHUNK_DELIMITER);
-//         }
-
-//         await delay(1200);
-//     }
-
-//     res.end();
-// });
-
-
-
 app.post('/generar', upload.single('logo'), async (req, res) => {
-    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('X-Accel-Buffering', 'no'); 
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.flushHeaders();
 
     const { prompt, colors, aspectRatio } = req.body;
