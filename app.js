@@ -56,13 +56,6 @@ function buildPrompt(prompt, v, colors) {
 
     Create a photorealistic pest control advertisement.
 
-    Main subject: Hispanic male technician.
-
-    Outfit: ${v.outfit}
-    Scene: ${v.scene}
-    Environment: ${v.environment}
-    Mood: ${v.mood}
-
     Design:
     - Clean layout
     - Space for text
@@ -83,7 +76,7 @@ app.post('/generar', upload.single('logo'), async (req, res) => {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('X-Accel-Buffering', 'no'); 
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');-
     res.flushHeaders();
 
     const { prompt, colors, aspectRatio } = req.body;
